@@ -1,0 +1,118 @@
+# ==============================================================
+# HTTPRoutes — one per service, each in the service's own namespace.
+# All attach to the single jerney-gateway in the networking namespace.
+# GKE matches requests by hostname and routes to the correct backend.
+#
+# Fields group/kind/weight/matches are API server defaults included
+# explicitly here to prevent ArgoCD drift detection loops.
+# ==============================================================
+
+# ---- ArgoCD ----
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd-route
+  namespace: argocd
+spec:
+  parentRefs:
+  - name: jerney-gateway
+    namespace: networking
+    sectionName: https
+  hostnames:
+  - argocd.nilkanthprojects.site
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - group: ""
+      kind: Service
+      name: argo-cd-argocd-server
+      port: 80
+      weight: 1
+---
+# ---- Grafana ----
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: grafana-route
+  namespace: monitoring
+spec:
+  parentRefs:
+  - name: jerney-gateway
+    namespace: networking
+    sectionName: https
+  hostnames:
+  - grafana.nilkanthprojects.site
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - group: ""
+      kind: Service
+      name: prometheus-stack-grafana
+      port: 80
+      weight: 1
+---
+# ---- SigNoz ----
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: signoz-route
+  namespace: platform
+spec:
+  parentRefs:
+  - name: jerney-gateway
+    namespace: networking
+    sectionName: https
+  hostnames:
+  - signoz.nilkanthprojects.site
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - group: ""
+      kind: Service
+      name: signoz
+      port: 8080
+      weight: 1
+---
+# ---- Jerney app (frontend + backend on same host) ----
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: jerney-route
+  namespace: jerney
+spec:
+  parentRefs:
+  - name: jerney-gateway
+    namespace: networking
+    sectionName: https
+  hostnames:
+  - jerney.nilkanthprojects.site
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api
+    backendRefs:
+    - group: ""
+      kind: Service
+      name: jerney-backend
+      port: 5000
+      weight: 1
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - group: ""
+      kind: Service
+      name: jerney-frontend
+      port: 80
+      weight: 1

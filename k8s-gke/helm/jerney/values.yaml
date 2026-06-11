@@ -1,0 +1,57 @@
+# ==============================================================
+# Jerney Helm Values — GKE
+#
+# Self-contained values for the GKE cluster.
+# Differences from k8s/helm/jerney/values.yaml (EC2/kubeadm):
+#   - postgresql.primary.persistence.storageClass: standard-rwo
+#     (GKE Persistent Disk vs local-path on kubeadm)
+# ==============================================================
+
+# replicaCount managed by HPA below
+hpa:
+  frontend:
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPU: 50
+  backend:
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPU: 50
+image:
+  backend:
+    repository: docker.io/nmiyani/jerney-backend
+    tag: eed3a7a
+  frontend:
+    repository: docker.io/nmiyani/jerney-frontend
+    tag: eed3a7a
+postgresql:
+  enabled: true
+  image:
+    tag: "latest"
+  auth:
+    username: jerney_user
+    password: jerney_pass_2026
+    database: jerney_db
+  primary:
+    persistence:
+      size: 10Gi
+      # GKE standard-rwo = Persistent Disk (ReadWriteOnce).
+      storageClass: "standard-rwo"
+otel:
+  endpoint: http://signoz-otel-collector.platform.svc.cluster.local:4317
+service:
+  frontend:
+    type: ClusterIP
+    port: 80
+    targetPort: 8080
+    annotations: {}
+  backend:
+    type: ClusterIP
+    port: 5000
+    targetPort: 5000
+    annotations: {}
+  db:
+    type: ClusterIP
+    port: 5432
+    targetPort: 5432
+

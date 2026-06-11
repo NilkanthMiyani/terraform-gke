@@ -1,0 +1,15 @@
+loki:
+  enabled: true
+  image:
+    # Pinned to 2.9.10 — Grafana 10/11 health check sends vector() query
+    # which requires Loki >= 2.9. Default loki-stack installs ~2.6.x.
+    tag: "2.9.10"
+
+promtail:
+  enabled: true   # ships pod logs to Loki
+
+grafana:
+  enabled: false  # already deployed via prometheus-stack
+  sidecar:
+    datasources:
+      enabled: false  # loki-stack's datasource configmap ignored — Loki defined in prometheus-stack values instead

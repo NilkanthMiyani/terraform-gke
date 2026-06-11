@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: networking
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: jerney-gateway
+  namespace: networking
+  annotations:
+    # References the Certificate Map created by Terraform.
+    # GKE picks the correct cert per SNI hostname — single LB, all four domains.
+    networking.gke.io/certmap: jerney-cert-map
+spec:
+  gatewayClassName: gke-l7-global-external-managed
+  listeners:
+  - name: https
+    protocol: HTTPS
+    port: 443
+    allowedRoutes:
+      namespaces:
+        from: All  # HTTPRoutes in any namespace can attach to this listener
+  - name: http
+    protocol: HTTP
+    port: 80
+    allowedRoutes:
+      namespaces:
+        from: All

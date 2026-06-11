@@ -1,0 +1,26 @@
+# HealthCheckPolicies for services behind the GKE Gateway.
+# Must be in the same namespace as the Service they target.
+# GKE default health check often probes the wrong path; these policies
+# force the correct HTTP path so GCP backend health checks pass.
+
+# ---- Grafana ----
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: grafana-health
+  namespace: monitoring
+spec:
+  default:
+    checkIntervalSec: 15
+    timeoutSec: 15
+    healthyThreshold: 1
+    unhealthyThreshold: 2
+    config:
+      type: HTTP
+      httpHealthCheck:
+        requestPath: /api/health
+        port: 3000
+  targetRef:
+    group: ""
+    kind: Service
+    name: prometheus-stack-grafana
