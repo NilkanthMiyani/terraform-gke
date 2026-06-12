@@ -1,3 +1,92 @@
+alertmanager:
+  alertmanagerSpec:
+    secrets:
+      - alertmanager-smtp-key  # mounts at /etc/alertmanager/secrets/alertmanager-smtp-key/
+  config:
+    global:
+      smtp_smarthost: 'smtp.resend.com:587'
+      smtp_from: 'alerts@nilkanthprojects.site'
+      smtp_auth_username: 'resend'
+      smtp_auth_password_file: '/etc/alertmanager/secrets/alertmanager-smtp-key/smtp_auth_password'
+      smtp_require_tls: true
+    route:
+      group_by: ['alertname', 'namespace', 'pod']
+      group_wait: 30s       # wait 30s before sending first alert (groups burst alerts)
+      group_interval: 5m    # wait 5m before sending new alerts for same group
+      repeat_interval: 4h   # resend if still firing after 4h
+      receiver: 'email'
+      routes:
+        - matchers:
+            - severity = "critical"
+          receiver: 'email'
+          repeat_interval: 1h   # critical alerts repeat every hour
+    receivers:
+      - name: 'email'
+        email_configs:
+          - to: 'miyaninilkanth2@gmail.com'
+            send_resolved: true   # also email when alert resolves
+    inhibit_rules:
+      - source_matchers:
+          - severity = "critical"
+        target_matchers:
+          - severity = "warning"
+        equal: ['alertname', 'namespace']  # suppress warning if critical already firing
+
+additionalPrometheusRulesMap:
+  jerney-alerts:
+    groups:
+      - name: pod-health
+        rules:
+          - alert: PodCrashLooping
+            expr: rate(kube_pod_container_status_restarts_total{namespace="jerney"}[10m]) * 600 > 3
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Pod {{ $labels.pod }} is crash looping"
+              description: "{{ $labels.pod }} restarted >3 times in 10m. Check: kubectl logs -n jerney {{ $labels.pod }} --previous"
+
+          - alert: PodNotReady
+            expr: kube_pod_status_ready{namespace="jerney", condition="true"} == 0
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Pod {{ $labels.pod }} not ready for 5m"
+              description: "{{ $labels.pod }} in namespace {{ $labels.namespace }} is not passing readiness checks."
+
+          - alert: DeploymentUnavailable
+            expr: kube_deployment_status_replicas_available{namespace="jerney"} == 0
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Deployment {{ $labels.deployment }} has 0 replicas"
+              description: "{{ $labels.deployment }} in {{ $labels.namespace }} has no available pods — app is down."
+
+      - name: resource-pressure
+        rules:
+          - alert: PodHighMemory
+            expr: |
+              (container_memory_working_set_bytes{namespace="jerney", container!=""}
+               / on(pod, container, namespace)
+               kube_pod_container_resource_limits{namespace="jerney", resource="memory", container!=""}) > 0.85
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "{{ $labels.container }} memory >85% of limit"
+              description: "Container {{ $labels.container }} in pod {{ $labels.pod }} is using more than 85% of its memory limit."
+
+          - alert: PVCAlmostFull
+            expr: (kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes) > 0.80
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "PVC {{ $labels.persistentvolumeclaim }} is 80%+ full"
+              description: "PVC {{ $labels.persistentvolumeclaim }} in {{ $labels.namespace }} is running out of space."
+
 grafana:
   adminPassword: admin123
   service:
