@@ -39,11 +39,13 @@ spec:
       ports:
         - port: 5000
           protocol: TCP
-    # Allow from NGINX Ingress Controller (for /api routes)
+    # Allow from GKE Gateway (GCP L7 load balancer via container-native NEG)
+    # Traffic comes directly from GCP infrastructure IPs, not from a proxy pod
     - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: ingress-nginx
+        - ipBlock:
+            cidr: 35.191.0.0/16    # GCP load balancer + health checks
+        - ipBlock:
+            cidr: 130.211.0.0/22   # GCP load balancer proxy
       ports:
         - port: 5000
           protocol: TCP
