@@ -7,24 +7,25 @@ grafana:
     enabled: false  # routing handled by GKE Gateway HTTPRoute in k8s-gke/platform/gateway/
   sidecar:
     datasources:
-      defaultDatasourceEnabled: false  # managed explicitly in additionalDataSources below
+      defaultDatasourceEnabled: false
       alertmanager:
-        enabled: true
-        handleGrafanaManagedAlerts: false
-        implementation: prometheus
-        isDefault: false
-  additionalDataSources:
-    - name: Prometheus
-      type: prometheus
-      url: http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090
-      isDefault: true
-    - name: Loki
-      type: loki
-      access: proxy
-      url: http://loki-stack.monitoring.svc.cluster.local:3100
-      isDefault: false
-      jsonData:
-        maxLines: 1000
+        enabled: false
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090
+          isDefault: true
+          orgId: 1
+        - name: Loki
+          type: loki
+          url: http://loki-stack.monitoring.svc.cluster.local:3100
+          isDefault: false
+          orgId: 1
+          jsonData:
+            maxLines: 1000
 
 prometheus:
   prometheusSpec:
