@@ -22,3 +22,6 @@ override.tf.json
 .DS_Store
 *.swp
 *.swo
+
+# ---- Notes ----
+problem.txt

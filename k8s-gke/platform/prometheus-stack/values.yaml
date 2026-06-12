@@ -5,6 +5,14 @@ grafana:
     annotations: {}
   ingress:
     enabled: false  # routing handled by GKE Gateway HTTPRoute in k8s-gke/platform/gateway/
+  sidecar:
+    datasources:
+      defaultDatasourceEnabled: true
+      alertmanager:
+        enabled: true
+        handleGrafanaManagedAlerts: false
+        implementation: prometheus
+        isDefault: false  # prevents conflict with Prometheus as the default
   additionalDataSources:
     - name: Loki
       type: loki

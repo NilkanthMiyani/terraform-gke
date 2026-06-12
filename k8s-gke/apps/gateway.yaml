@@ -10,7 +10,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/NilkanthMiyani/jerney-devops.git
+    repoURL: https://github.com/NilkanthMiyani/terraform-gke.git
     targetRevision: main
     path: k8s-gke/platform/gateway
   destination:
