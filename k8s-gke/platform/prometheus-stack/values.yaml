@@ -7,9 +7,7 @@ grafana:
     enabled: false  # routing handled by GKE Gateway HTTPRoute in k8s-gke/platform/gateway/
   sidecar:
     datasources:
-      defaultDatasourceEnabled: false
-      alertmanager:
-        enabled: false
+      enabled: false  # disable sidecar — loki-stack always creates isDefault:true ConfigMap which conflicts
   datasources:
     datasources.yaml:
       apiVersion: 1
@@ -26,6 +24,14 @@ grafana:
           orgId: 1
           jsonData:
             maxLines: 1000
+        - name: Alertmanager
+          type: alertmanager
+          url: http://prometheus-stack-kube-prom-alertmanager.monitoring.svc.cluster.local:9093
+          isDefault: false
+          orgId: 1
+          jsonData:
+            handleGrafanaManagedAlerts: false
+            implementation: prometheus
 
 prometheus:
   prometheusSpec:
