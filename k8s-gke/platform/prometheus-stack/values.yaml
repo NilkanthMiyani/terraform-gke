@@ -7,7 +7,8 @@ grafana:
     enabled: false  # routing handled by GKE Gateway HTTPRoute in k8s-gke/platform/gateway/
   sidecar:
     datasources:
-      enabled: false  # disable sidecar — loki-stack always creates isDefault:true ConfigMap which conflicts
+      enabled: false
+      defaultDatasourceEnabled: false  # prevent chart from auto-creating prometheus datasource ConfigMap (conflicts with grafana.datasources below)
   datasources:
     datasources.yaml:
       apiVersion: 1
