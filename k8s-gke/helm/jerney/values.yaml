@@ -26,8 +26,6 @@ image:
     tag: eed3a7a
 postgresql:
   enabled: true
-  image:
-    tag: "latest"
   auth:
     username: jerney_user
     password: jerney_pass_2026
