@@ -5,6 +5,13 @@ grafana:
     annotations: {}
   ingress:
     enabled: false  # routing handled by GKE Gateway HTTPRoute in k8s-gke/platform/gateway/
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   sidecar:
     datasources:
       enabled: false
@@ -38,6 +45,22 @@ prometheus:
   prometheusSpec:
     podMonitorSelectorNilMatchesAll: true
     serviceMonitorSelectorNilMatchesAll: true
+    retention: 15d
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: standard-rwo
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
     # Scrape pods with prometheus.io/scrape: "true" annotation.
     # Used by the backend /metrics endpoint.
     additionalScrapeConfigs:
